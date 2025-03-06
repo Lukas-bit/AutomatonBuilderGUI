@@ -26,6 +26,7 @@ import ErrorDialogBox from "./ErrorDialogBox";
 import { FaRegImage } from "react-icons/fa6";
 import { BiFileBlank, BiReset } from "react-icons/bi";
 import { MdOutlineFitScreen } from "react-icons/md";
+import { testStringOnAutomata } from "./TestStringOnAutomata";
 
 import { ClosableModalWindow } from "./ModalWindow";
 import { motion, AnimatePresence } from "framer-motion";
@@ -72,6 +73,7 @@ export default function Toolbox(props: React.PropsWithChildren<ToolboxProps>) {
     StateManager.snapToGridEnabled,
   );
   const fileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the file input
+  const testFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the test file input
 
   // Function to toggle snap to grid feature on/off
   const handleToggleSnap = () => {
@@ -82,6 +84,11 @@ export default function Toolbox(props: React.PropsWithChildren<ToolboxProps>) {
   // Function to trigger file input click event
   const handleLoadButtonClick = () => {
     fileInputRef.current?.click(); // Programmatically click the hidden file input
+  };
+
+  // Function to trigger test file input click event
+  const handleLoadTestsButtonClick = () => {
+    testFileInputRef.current?.click(); // Programmatically click the hidden file input
   };
 
   // functions to handle the clear confierm window popup
@@ -145,9 +152,21 @@ export default function Toolbox(props: React.PropsWithChildren<ToolboxProps>) {
         StateManager.loadAutomaton(parsedData);
       })
       .catch((response) => {
-        showError(
-          "The file does not contain valid JSON.",
-        );
+        showError("The file does not contain valid JSON.");
+      });
+  };
+
+  const handleTestFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    StateManager.uploadJSON(e)
+      .then((parsedData) => {
+        for (let test of parsedData.Tests) {
+          if (test.expecting === undefined)
+            console.log("Error: No expected result given.", test.expecting);
+          testStringOnAutomata(test.string);
+        }
+      })
+      .catch((response) => {
+        showError("The file does not contain valid JSON.");
       });
   };
 
@@ -290,6 +309,19 @@ export default function Toolbox(props: React.PropsWithChildren<ToolboxProps>) {
           bgColor="bg-teal-500"
           margin="m-10"
         />
+        <input
+          type="file"
+          id="test-file-uploader"
+          ref={testFileInputRef}
+          style={{ display: "none" }}
+          onChange={handleTestFileUpload}
+        />
+        <ActionButton
+          onClick={handleLoadTestsButtonClick}
+          icon={<BsCake />}
+          title="Upload Tests from JSON"
+          bgColor="bg-[#800000]"
+        ></ActionButton>
       </div>
       {/* Window for clear button */}
       {isClearDialogVisible && (

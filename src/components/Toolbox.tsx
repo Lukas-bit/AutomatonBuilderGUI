@@ -160,9 +160,12 @@ export default function Toolbox(props: React.PropsWithChildren<ToolboxProps>) {
     StateManager.uploadJSON(e)
       .then((parsedData) => {
         for (let test of parsedData.Tests) {
-          if (test.expecting === undefined)
-            console.log("Error: No expected result given.", test.expecting);
-          testStringOnAutomata(test.string);
+          if (test.string === undefined || test.expecting === undefined)
+            console.log(
+              "Error: Missing a 'string' or 'expecting' parameter.",
+              test.expecting,
+            );
+          else testStringOnAutomata(test.string);
         }
       })
       .catch((response) => {

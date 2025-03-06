@@ -1049,6 +1049,20 @@ export default class StateManager {
 
       // Update the points for the tentative transition line
       StateManager._tentConnectionLine.points([0, 0, xDelta, yDelta]);
+    } else if (
+      StateManager.tentativeTransitionTarget ===
+      StateManager._tentativeTransitionSource
+    ) {
+      // Set arrow to preview the loop transition
+      StateManager._tentConnectionLine.points(
+        TransitionWrapper.getLoopTransitionPoints(
+          { x: 0, y: 0 },
+          0,
+          0 -
+            NodeWrapper.NodeRadius -
+            TransitionWrapper.LoopTransitionDist * 1.5,
+        ),
+      );
     } else {
       let dstPos =
         StateManager.tentativeTransitionTarget.nodeGroup.absolutePosition();
@@ -1804,6 +1818,15 @@ export default class StateManager {
     const labels = StateManager._nodeWrappers.map((node) => node.labelText);
     const uniqueLabels = new Set(labels);
     return labels.length === uniqueLabels.size;
+  }
+
+  /* Returns whether or not all tokens in the alphabet are unique */
+  public static areAllTokensUnique(): boolean {
+    const tokenSymbols = StateManager._alphabet.map((token) =>
+      token.symbol.trim(),
+    );
+    const uniqueSymbols = new Set(tokenSymbols);
+    return uniqueSymbols.size === tokenSymbols.length;
   }
 
   /** Sets the array of tokens for the automaton. */

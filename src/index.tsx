@@ -1,6 +1,6 @@
 import StateManager from "./StateManager";
 import { Tool } from "./Tool";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { createRoot } from "react-dom/client";
 import NodeView from "./components/NodeView";
 import Toolbox from "./components/Toolbox";
@@ -9,7 +9,7 @@ import SelectableObject from "./SelectableObject";
 import DetailsBox from "./components/DetailsBox/DetailsBox";
 import { ClosableModalWindow } from "./components/ModalWindow";
 import ConfigureAutomatonWindow from "./components/ConfigureAutomatonWindow";
-import { BsGearFill, BsMoonFill } from "react-icons/bs";
+import { BsGearFill, BsMoonFill, BsCakeFill, BsCake } from "react-icons/bs";
 import TestStringWindow from "./components/TestStringWindow";
 import InformationBox, {
   InformationBoxType,
@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AutomatonElementError from "../node_modules/automaton-kit/lib/errors/AutomatonElementError";
 import NodeWrapper from "./NodeWrapper";
 import { useActionStack } from "./utilities/ActionStackUtilities";
+import { ListItem } from "./components/ListItem";
 
 function App() {
   const [currentTool, setCurrentTool] = useState(Tool.States);
@@ -30,6 +31,45 @@ function App() {
   const [isLabelUnique, setIsLabelUnique] = useState(true);
   const [areTokensUnique, setAreTokensUnique] = useState(true);
   const [_, currentStackLocation] = useActionStack();
+  const [testStrings, setTestStrings] = useState([]);
+  const testFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the test file input
+
+  // Function to trigger test file input click event
+  const handleLoadTestsButtonClick = () => {
+    testFileInputRef.current?.click(); // Programmatically click the hidden file input
+  };
+
+  const handleTestFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    StateManager.uploadJSON(e)
+      .then((parsedData) => {
+        let i = 0;
+        let arr = [];
+        for (let test of parsedData.Tests) {
+          if (test.string === undefined || test.expecting === undefined)
+            console.log("Error: Missing a 'string' or 'expecting' parameter.");
+          else
+            arr.push({
+              id: i++,
+              string: test.string,
+              expecting: test.expecting,
+            });
+        }
+        setTestStrings(arr);
+      })
+      .catch((response) => {
+        console.log("The file does not contain valid JSON.");
+      });
+  };
+
+  const DisplayTest = testStrings.map((temp) => (
+    <div key={temp.id} className={`m-2`}>
+      <ListItem
+        title={temp.string}
+        subtitle={`Should be ${temp.expecting}.`}
+        rightContent={<BsCakeFill></BsCakeFill>}
+      />
+    </div>
+  ));
 
   // Adds the "confirm close" modal when attempting to close the page.
   // Solution from this stackoverflow page:
@@ -148,6 +188,12 @@ function App() {
     setConfigWindowOpen(false);
   };
 
+  // React state and open/close functions for the "Tests" panel
+  const [testsPanelOpen, setTestsPanelOpen] = useState(false);
+  const toggleTestsPanel = () => {
+    setTestsPanelOpen(!testsPanelOpen);
+  };
+
   // React state and enable/disable functions for dark mode.
   const [useDarkMode, setDarkMode] = useState(false);
   const toggleDarkMode = () => {
@@ -252,6 +298,15 @@ function App() {
               </div>
             </button>
             <button
+              className="rounded-full p-2 m-1 mx-2 block bg-cyan-500 text-white text-center"
+              onClick={toggleTestsPanel}
+            >
+              <div className="flex flex-row items-center place-content-center mx-2">
+                <BsCakeFill className="mr-1" />
+                Tests
+              </div>
+            </button>
+            <button
               className="rounded-full p-2 m-1 mx-2 block bg-gray-500 text-white text-center"
               onClick={toggleDarkMode}
             >
@@ -285,6 +340,43 @@ function App() {
           )}
         </AnimatePresence>
       }
+      {testsPanelOpen && (
+        <>
+          <div
+            className={`flex max-h-screen fixed bottom-0 left-0 z-10 w-max m-5`}
+          >
+            <div
+              className={`overflow-y-auto items-end justify-center p-4 text-center m-5 sm:items-center sm:p-0`}
+            >
+              <div className="relative transform overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 dark:text-white text-left shadow-xl sm:w-full sm:max-w-lg">
+                <div className="m-2">
+                  <div className="flow-root">
+                    <div className="float-left">
+                      <div className="font-medium text-3xl mb-2">Tests</div>
+                    </div>
+                    <input
+                      type="file"
+                      id="test-file-uploader"
+                      ref={testFileInputRef}
+                      style={{ display: "none" }}
+                      onChange={handleTestFileUpload}
+                    />
+                    <button
+                      className="float-right"
+                      onClick={handleLoadTestsButtonClick}
+                      title="Upload Tests from JSON"
+                      color="bg-[#800000]"
+                    >
+                      <BsCake />
+                    </button>
+                  </div>
+                </div>
+                {DisplayTest}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

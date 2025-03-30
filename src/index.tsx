@@ -61,11 +61,11 @@ function App() {
       });
   };
 
-  const DisplayTest = testStrings.map((temp) => (
-    <div key={temp.id} className={`m-2`}>
+  const DisplayTest = testStrings.map((testStr) => (
+    <div key={testStr.id} className="m-2 text-left">
       <ListItem
-        title={temp.string}
-        subtitle={`Should be ${temp.expecting}.`}
+        title={testStr.string}
+        subtitle={`Should be ${testStr.expecting}.`}
         rightContent={<BsCakeFill></BsCakeFill>}
       />
     </div>
@@ -233,19 +233,20 @@ function App() {
     <div className={useDarkMode ? "dark" : ""}>
       <NodeView />
       <div className="flex flex-row h-screen text-center">
-        <FloatingPanel heightPolicy="min" style={{ width: "300px" }}>
-          <DetailsBox
-            selection={selectedObjects}
-            startNode={startNode}
-            setStartNode={setStartNode}
-          />
+        <div className="flex flex-col">
+          <FloatingPanel heightPolicy="min" style={{ width: "300px" }}>
+            <DetailsBox
+              selection={selectedObjects}
+              startNode={startNode}
+              setStartNode={setStartNode}
+            />
 
-          <div className="max-h-96 overflow-y-auto">
-            <AnimatePresence>{errorBoxes}</AnimatePresence>
-          </div>
+            <div className="max-h-96 overflow-y-auto">
+              <AnimatePresence>{errorBoxes}</AnimatePresence>
+            </div>
 
-          {/* Example error message boxes commented out */}
-          {/*
+            {/* Example error message boxes commented out */}
+            {/*
                     <InformationBox infoBoxType={InformationBoxType.Error}>
                         State "q0" has multiple transitions for token "a"
                     </InformationBox>
@@ -269,54 +270,82 @@ function App() {
                     </InformationBox>
                     */}
 
-          <TestStringWindow />
-          {!isLabelUnique && (
-            <InformationBox infoBoxType={InformationBoxType.Error}>
-              Duplicate state labels detected. Each state must have a unique
-              label.
-            </InformationBox>
-          )}
-          {!areTokensUnique && (
-            <InformationBox infoBoxType={InformationBoxType.Error}>
-              Duplicate tokens detected. Each token must be a unique character.
-            </InformationBox>
-          )}
-          {emptyStringToken && (
-            <InformationBox infoBoxType={InformationBoxType.Error}>
-              Invalid token: Empty string detected.
-            </InformationBox>
-          )}
+            <TestStringWindow />
+            {!isLabelUnique && (
+              <InformationBox infoBoxType={InformationBoxType.Error}>
+                Duplicate state labels detected. Each state must have a unique
+                label.
+              </InformationBox>
+            )}
+            {!areTokensUnique && (
+              <InformationBox infoBoxType={InformationBoxType.Error}>
+                Duplicate tokens detected. Each token must be a unique
+                character.
+              </InformationBox>
+            )}
+            {emptyStringToken && (
+              <InformationBox infoBoxType={InformationBoxType.Error}>
+                Invalid token: Empty string detected.
+              </InformationBox>
+            )}
 
-          <div className="flex flex-col items-center mt-4">
-            <button
-              className="rounded-full p-2 m-1 mx-2 block bg-amber-500 text-white text-center"
-              onClick={openConfigWindow}
-            >
-              <div className="flex flex-row items-center place-content-center mx-2">
-                <BsGearFill className="mr-1" />
-                Configure Automaton
+            <div className="flex flex-col items-center mt-4">
+              <button
+                className="rounded-full p-2 m-1 mx-2 block bg-amber-500 text-white text-center"
+                onClick={openConfigWindow}
+              >
+                <div className="flex flex-row items-center place-content-center mx-2">
+                  <BsGearFill className="mr-1" />
+                  Configure Automaton
+                </div>
+              </button>
+              <button
+                className="rounded-full p-2 m-1 mx-2 block bg-cyan-500 text-white text-center"
+                onClick={toggleTestsPanel}
+              >
+                <div className="flex flex-row items-center place-content-center mx-2">
+                  <BsCakeFill className="mr-1" />
+                  Tests
+                </div>
+              </button>
+              <button
+                className="rounded-full p-2 m-1 mx-2 block bg-gray-500 text-white text-center"
+                onClick={toggleDarkMode}
+              >
+                <div className="flex flex-row items-center place-content-center mx-2">
+                  <BsMoonFill className="mr-1" />
+                  Dark Mode
+                </div>
+              </button>
+            </div>
+          </FloatingPanel>
+
+          {testsPanelOpen && (
+            <FloatingPanel heightPolicy="min" style={{ width: "300px" }}>
+              <div className="flow-root">
+                <div className="float-left">
+                  <div className="font-medium text-3xl mb-2">Tests</div>
+                </div>
+                <input
+                  type="file"
+                  id="test-file-uploader"
+                  ref={testFileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleTestFileUpload}
+                />
+                <button
+                  className="float-right"
+                  onClick={handleLoadTestsButtonClick}
+                  title="Upload Tests from JSON"
+                  color="bg-[#800000]"
+                >
+                  <span className="text-sky-500">Upload Tests</span>
+                </button>
               </div>
-            </button>
-            <button
-              className="rounded-full p-2 m-1 mx-2 block bg-cyan-500 text-white text-center"
-              onClick={toggleTestsPanel}
-            >
-              <div className="flex flex-row items-center place-content-center mx-2">
-                <BsCakeFill className="mr-1" />
-                Tests
-              </div>
-            </button>
-            <button
-              className="rounded-full p-2 m-1 mx-2 block bg-gray-500 text-white text-center"
-              onClick={toggleDarkMode}
-            >
-              <div className="flex flex-row items-center place-content-center mx-2">
-                <BsMoonFill className="mr-1" />
-                Dark Mode
-              </div>
-            </button>
-          </div>
-        </FloatingPanel>
+              <div className="max-h-48 overflow-y-auto">{DisplayTest}</div>
+            </FloatingPanel>
+          )}
+        </div>
 
         <FloatingPanel heightPolicy="min" style={{ width: "250px" }}>
           <DetailsBox_ActionStackViewer />
@@ -340,43 +369,6 @@ function App() {
           )}
         </AnimatePresence>
       }
-      {testsPanelOpen && (
-        <>
-          <div
-            className={`flex max-h-screen fixed bottom-0 left-0 z-10 w-max m-5`}
-          >
-            <div
-              className={`overflow-y-auto items-end justify-center p-4 text-center m-5 sm:items-center sm:p-0`}
-            >
-              <div className="relative transform overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 dark:text-white text-left shadow-xl sm:w-full sm:max-w-lg">
-                <div className="m-2">
-                  <div className="flow-root">
-                    <div className="float-left">
-                      <div className="font-medium text-3xl mb-2">Tests</div>
-                    </div>
-                    <input
-                      type="file"
-                      id="test-file-uploader"
-                      ref={testFileInputRef}
-                      style={{ display: "none" }}
-                      onChange={handleTestFileUpload}
-                    />
-                    <button
-                      className="float-right"
-                      onClick={handleLoadTestsButtonClick}
-                      title="Upload Tests from JSON"
-                      color="bg-[#800000]"
-                    >
-                      <BsCake />
-                    </button>
-                  </div>
-                </div>
-                {DisplayTest}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

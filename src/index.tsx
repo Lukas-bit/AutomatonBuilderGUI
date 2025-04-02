@@ -20,7 +20,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import AutomatonElementError from "../node_modules/automaton-kit/lib/errors/AutomatonElementError";
 import NodeWrapper from "./NodeWrapper";
 import { useActionStack } from "./utilities/ActionStackUtilities";
-import { ListItem } from "./components/ListItem";
+import {
+  CoreListItem,
+  CoreListItem_Left,
+  CoreListItem_Right,
+} from "./components/ListItem";
+import { testStringOnAutomata } from "./components/TestStringOnAutomata";
 
 function App() {
   const [currentTool, setCurrentTool] = useState(Tool.States);
@@ -61,13 +66,32 @@ function App() {
       });
   };
 
+  let expectedResult = (expectingStr: String) => {
+    if (expectingStr === "Accepted")
+      return <span className="text-lime-400"> {expectingStr}</span>;
+    else return <span className="text-red-600"> {expectingStr}</span>;
+  };
+
   const DisplayTest = testStrings.map((testStr) => (
     <div key={testStr.id} className="m-2 text-left">
-      <ListItem
+      {/*<ListItem
         title={testStr.string}
-        subtitle={`Should be ${testStr.expecting}.`}
+        subtitle={`Should be `}
         rightContent={<BsCakeFill></BsCakeFill>}
-      />
+      />*/}
+      <CoreListItem>
+        <CoreListItem_Left>
+          {testStr.string}
+          <div>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              Should be
+            </span>
+            {/*<span className="text-lime-400">{testStr.expecting}</span>*/}
+            {expectedResult(testStr.expecting)}
+          </div>
+        </CoreListItem_Left>
+        <CoreListItem_Right>{<BsCakeFill></BsCakeFill>}</CoreListItem_Right>
+      </CoreListItem>
     </div>
   ));
 
@@ -229,6 +253,12 @@ function App() {
     );
   });
 
+  let runTests = () => {
+    let results = testStrings.map((test) => {
+      testStringOnAutomata(test.string);
+    });
+  };
+
   return (
     <div className={useDarkMode ? "dark" : ""}>
       <NodeView />
@@ -343,6 +373,14 @@ function App() {
                 </button>
               </div>
               <div className="max-h-48 overflow-y-auto">{DisplayTest}</div>
+              <div className="flex flex-col">
+                <button
+                  className="rounded-full p-2 m-1 mx-2 block bg-blue-600 text-white text-center"
+                  onClick={runTests}
+                >
+                  Run All Tests
+                </button>
+              </div>
             </FloatingPanel>
           )}
         </div>

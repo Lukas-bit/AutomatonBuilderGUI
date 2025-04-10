@@ -9,7 +9,13 @@ import SelectableObject from "./SelectableObject";
 import DetailsBox from "./components/DetailsBox/DetailsBox";
 import { ClosableModalWindow } from "./components/ModalWindow";
 import ConfigureAutomatonWindow from "./components/ConfigureAutomatonWindow";
-import { BsGearFill, BsMoonFill, BsCakeFill, BsCake } from "react-icons/bs";
+import {
+  BsGearFill,
+  BsMoonFill,
+  BsCakeFill,
+  BsXCircleFill,
+  BsCheckCircleFill,
+} from "react-icons/bs";
 import TestStringWindow from "./components/TestStringWindow";
 import InformationBox, {
   InformationBoxType,
@@ -26,6 +32,9 @@ import {
   CoreListItem_Right,
 } from "./components/ListItem";
 import { testStringOnAutomata } from "./components/TestStringOnAutomata";
+import { IconContext } from "react-icons";
+import { GrTest } from "react-icons/gr";
+import { BiTestTube } from "react-icons/bi";
 
 function App() {
   const [currentTool, setCurrentTool] = useState(Tool.States);
@@ -37,7 +46,12 @@ function App() {
   const [areTokensUnique, setAreTokensUnique] = useState(true);
   const [_, currentStackLocation] = useActionStack();
   const [testStrings, setTestStrings] = useState([]);
+  const [testResults, setTestResults] = useState([]);
   const testFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the test file input
+
+  //  ===================
+  //  Uploading Test File
+  //  ===================
 
   // Function to trigger test file input click event
   const handleLoadTestsButtonClick = () => {
@@ -49,6 +63,7 @@ function App() {
       .then((parsedData) => {
         let i = 0;
         let arr = [];
+        setTestResults([]);
         for (let test of parsedData.Tests) {
           if (test.string === undefined || test.expecting === undefined)
             console.log("Error: Missing a 'string' or 'expecting' parameter.");
@@ -66,34 +81,54 @@ function App() {
       });
   };
 
-  let expectedResult = (expectingStr: String) => {
-    if (expectingStr === "Accepted")
-      return <span className="text-lime-400"> {expectingStr}</span>;
-    else return <span className="text-red-600"> {expectingStr}</span>;
-  };
-
   const DisplayTest = testStrings.map((testStr) => (
     <div key={testStr.id} className="m-2 text-left">
-      {/*<ListItem
-        title={testStr.string}
-        subtitle={`Should be `}
-        rightContent={<BsCakeFill></BsCakeFill>}
-      />*/}
       <CoreListItem>
         <CoreListItem_Left>
-          {testStr.string}
-          <div>
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              Should be
-            </span>
-            {/*<span className="text-lime-400">{testStr.expecting}</span>*/}
-            {expectedResult(testStr.expecting)}
+          <div className="flex flex-row">
+            <div>{testResults[testStr.id]}</div>
+            <div>
+              {testStr.string}
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                Should be
+                {testStr.expecting === "Accepted" ? (
+                  <span className="text-lime-400"> {testStr.expecting}</span>
+                ) : (
+                  <span className="text-red-600"> {testStr.expecting}</span>
+                )}
+              </div>
+            </div>
           </div>
         </CoreListItem_Left>
-        <CoreListItem_Right>{<BsCakeFill></BsCakeFill>}</CoreListItem_Right>
+        <CoreListItem_Right>
+          <BiTestTube />
+        </CoreListItem_Right>
       </CoreListItem>
     </div>
   ));
+
+  let runTests = () => {
+    let results = testStrings.map((test) => {
+      let res = testStringOnAutomata(test.string);
+      return res === test.expecting ? (
+        <IconContext.Provider value={{ size: "1.5em" }}>
+          <BsCheckCircleFill className="min-h-full mr-2 text-green-500 text-lg" />
+        </IconContext.Provider>
+      ) : (
+        <IconContext.Provider value={{ size: "1.5em" }}>
+          <BsXCircleFill className="min-h-full mr-2 text-red-600 text-lg" />
+        </IconContext.Provider>
+      );
+    });
+    setTestResults(results);
+  };
+
+  // React state and open/close functions for the "Tests" panel
+  const [testsPanelOpen, setTestsPanelOpen] = useState(false);
+  const toggleTestsPanel = () => {
+    setTestsPanelOpen(!testsPanelOpen);
+  };
+  //  =======================================
 
   // Adds the "confirm close" modal when attempting to close the page.
   // Solution from this stackoverflow page:
@@ -212,12 +247,6 @@ function App() {
     setConfigWindowOpen(false);
   };
 
-  // React state and open/close functions for the "Tests" panel
-  const [testsPanelOpen, setTestsPanelOpen] = useState(false);
-  const toggleTestsPanel = () => {
-    setTestsPanelOpen(!testsPanelOpen);
-  };
-
   // React state and enable/disable functions for dark mode.
   const [useDarkMode, setDarkMode] = useState(false);
   const toggleDarkMode = () => {
@@ -253,17 +282,11 @@ function App() {
     );
   });
 
-  let runTests = () => {
-    let results = testStrings.map((test) => {
-      testStringOnAutomata(test.string);
-    });
-  };
-
   return (
     <div className={useDarkMode ? "dark" : ""}>
       <NodeView />
       <div className="flex flex-row h-screen text-center">
-        <div className="flex flex-col">
+        <div className="flex flex-col overflow-y-auto">
           <FloatingPanel heightPolicy="min" style={{ width: "300px" }}>
             <DetailsBox
               selection={selectedObjects}
@@ -334,7 +357,7 @@ function App() {
                 onClick={toggleTestsPanel}
               >
                 <div className="flex flex-row items-center place-content-center mx-2">
-                  <BsCakeFill className="mr-1" />
+                  <GrTest className="mr-1" />
                   Tests
                 </div>
               </button>

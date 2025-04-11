@@ -35,6 +35,7 @@ import { testStringOnAutomata } from "./components/TestStringOnAutomata";
 import { IconContext } from "react-icons";
 import { GrTest } from "react-icons/gr";
 import { BiTestTube } from "react-icons/bi";
+import ErrorDialogBox from "./components/ErrorDialogBox";
 
 function App() {
   const [currentTool, setCurrentTool] = useState(Tool.States);
@@ -48,6 +49,8 @@ function App() {
   const [testStrings, setTestStrings] = useState([]);
   const [testResults, setTestResults] = useState([]);
   const testFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the test file input
+  const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   //  ===================
   //  Uploading Test File
@@ -58,12 +61,20 @@ function App() {
     testFileInputRef.current?.click(); // Programmatically click the hidden file input
   };
 
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setIsErrorVisible(true);
+  };
+
+  const handleErrorClose = () => {
+    setIsErrorVisible(false);
+  };
+
   const handleTestFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     StateManager.uploadJSON(e)
       .then((parsedData) => {
         let i = 0;
         let arr = [];
-        setTestResults([]);
         for (let test of parsedData.Tests) {
           if (test.string === undefined || test.expecting === undefined)
             console.log("Error: Missing a 'string' or 'expecting' parameter.");
@@ -75,9 +86,10 @@ function App() {
             });
         }
         setTestStrings(arr);
+        setTestResults([]);
       })
       .catch((response) => {
-        console.log("The file does not contain valid JSON.");
+        showError(`Error: ${response}`);
       });
   };
 
@@ -433,6 +445,9 @@ function App() {
                 </button>
               </div>
             </FloatingPanel>
+          )}
+          {isErrorVisible && (
+            <ErrorDialogBox onClose={handleErrorClose} message={errorMessage} />
           )}
         </div>
 

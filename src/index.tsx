@@ -50,9 +50,9 @@ function App() {
   const [testResults, setTestResults] = useState([]);
   const [tests, setTests] = useState([]);
   const [testsPanelOpen, setTestsPanelOpen] = useState(false);
-  const testsFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the test file input
+  const testsFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the tests file input
 
-  // Function to trigger test file input click event
+  // Function to trigger tests file input click event
   const handleLoadTestsButtonClick = () => {
     testsFileInputRef.current?.click(); // Programmatically click the hidden file input
   };
@@ -323,7 +323,7 @@ function App() {
     <div className={useDarkMode ? "dark" : ""}>
       <NodeView />
       <div className="flex flex-row h-screen text-center">
-        <div className="flex flex-col overflow-y-auto">
+        <div className="overflow-y-auto">
           <FloatingPanel heightPolicy="min" style={{ width: "300px" }}>
             <DetailsBox
               selection={selectedObjects}

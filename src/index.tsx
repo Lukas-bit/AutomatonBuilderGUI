@@ -36,6 +36,7 @@ import { IconContext } from "react-icons";
 import { GrTest } from "react-icons/gr";
 import { BiTestTube } from "react-icons/bi";
 import ErrorDialogBox from "./components/ErrorDialogBox";
+import { isReturnStatement } from "typescript";
 
 function App() {
   const [currentTool, setCurrentTool] = useState(Tool.States);
@@ -155,6 +156,10 @@ function App() {
   };
 
   let runTests = () => {
+    if (StateManager.checkDebug()) {
+      showError("Please disable Debug Mode before running all of the tests.");
+      return;
+    }
     let results = testStrings.map((test) => {
       let res = testStringOnAutomata(test.string);
       return compareTestAndExpect(res, test.expecting);

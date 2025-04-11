@@ -92,9 +92,15 @@ function App() {
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Should be
                 {testStr.expecting === "Accepted" ? (
-                  <span className="text-lime-400"> {testStr.expecting}</span>
+                  <span className="text-lime-500 dark:text-lime-300">
+                    {" "}
+                    {testStr.expecting}
+                  </span>
                 ) : (
-                  <span className="text-red-600"> {testStr.expecting}</span>
+                  <span className="text-red-600 dark:text-red-400">
+                    {" "}
+                    {testStr.expecting}
+                  </span>
                 )}
               </div>
             </div>
@@ -117,11 +123,11 @@ function App() {
   let compareTestAndExpect = (testRes: string, expecting: string) => {
     return testRes === expecting ? (
       <IconContext.Provider value={{ size: "1.5em" }}>
-        <BsCheckCircleFill className="min-h-full mr-2 text-green-500 text-lg" />
+        <BsCheckCircleFill className="min-h-full mr-2 text-green-400 dark:text-green-600 text-lg" />
       </IconContext.Provider>
     ) : (
       <IconContext.Provider value={{ size: "1.5em" }}>
-        <BsXCircleFill className="min-h-full mr-2 text-red-600 text-lg" />
+        <BsXCircleFill className="min-h-full mr-2 text-red-500 dark:text-red-700 text-lg" />
       </IconContext.Provider>
     );
   };
@@ -374,7 +380,7 @@ function App() {
                 </div>
               </button>
               <button
-                className="rounded-full p-2 m-1 mx-2 block bg-cyan-500 text-white text-center"
+                className="rounded-full p-2 m-1 mx-2 block bg-cyan-400 dark:bg-cyan-600 text-white text-center"
                 onClick={toggleTestsPanel}
               >
                 <div className="flex flex-row items-center place-content-center mx-2">
@@ -411,15 +417,16 @@ function App() {
                   className="float-right"
                   onClick={handleLoadTestsButtonClick}
                   title="Upload Tests from JSON"
-                  color="bg-[#800000]"
                 >
-                  <span className="text-sky-500">Upload Tests</span>
+                  <span className="text-sky-500 dark:text-sky-200">
+                    Upload Tests
+                  </span>
                 </button>
               </div>
               <div className="max-h-48 overflow-y-auto">{DisplayTest}</div>
               <div className="flex flex-col">
                 <button
-                  className="rounded-full p-2 m-1 mx-2 block bg-blue-600 text-white text-center"
+                  className="rounded-full p-2 m-1 mx-2 block bg-blue-600 dark:bg-blue-800 text-white text-center"
                   onClick={runTests}
                 >
                   Run All Tests

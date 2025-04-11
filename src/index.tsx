@@ -101,24 +101,45 @@ function App() {
           </div>
         </CoreListItem_Left>
         <CoreListItem_Right>
-          <BiTestTube />
+          <button
+            onClick={() => {
+              runSingleTest(testStr.id);
+            }}
+            title={`Test ${testStr.string}`}
+          >
+            <BiTestTube />
+          </button>
         </CoreListItem_Right>
       </CoreListItem>
     </div>
   ));
 
+  let compareTestAndExpect = (testRes: string, expecting: string) => {
+    return testRes === expecting ? (
+      <IconContext.Provider value={{ size: "1.5em" }}>
+        <BsCheckCircleFill className="min-h-full mr-2 text-green-500 text-lg" />
+      </IconContext.Provider>
+    ) : (
+      <IconContext.Provider value={{ size: "1.5em" }}>
+        <BsXCircleFill className="min-h-full mr-2 text-red-600 text-lg" />
+      </IconContext.Provider>
+    );
+  };
+
+  let runSingleTest = (id: number) => {
+    let results = testStrings.map((testStr) => {
+      if (testStr.id === id) {
+        let res = testStringOnAutomata(testStr.string);
+        return compareTestAndExpect(res, testStr.expecting);
+      } else return testResults[testStr.id];
+    });
+    setTestResults(results);
+  };
+
   let runTests = () => {
     let results = testStrings.map((test) => {
       let res = testStringOnAutomata(test.string);
-      return res === test.expecting ? (
-        <IconContext.Provider value={{ size: "1.5em" }}>
-          <BsCheckCircleFill className="min-h-full mr-2 text-green-500 text-lg" />
-        </IconContext.Provider>
-      ) : (
-        <IconContext.Provider value={{ size: "1.5em" }}>
-          <BsXCircleFill className="min-h-full mr-2 text-red-600 text-lg" />
-        </IconContext.Provider>
-      );
+      return compareTestAndExpect(res, test.expecting);
     });
     setTestResults(results);
   };

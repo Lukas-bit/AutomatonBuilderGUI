@@ -27,7 +27,6 @@ import ErrorDialogBox from "./ErrorDialogBox";
 import { FaRegImage } from "react-icons/fa6";
 import { BiFileBlank, BiReset } from "react-icons/bi";
 import { MdOutlineFitScreen } from "react-icons/md";
-import { testStringOnAutomata } from "./TestStringOnAutomata";
 
 import { ClosableModalWindow } from "./ModalWindow";
 import { motion, AnimatePresence } from "framer-motion";

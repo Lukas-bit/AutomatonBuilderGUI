@@ -12,7 +12,6 @@ import ConfigureAutomatonWindow from "./components/ConfigureAutomatonWindow";
 import {
   BsGearFill,
   BsMoonFill,
-  BsCakeFill,
   BsXCircleFill,
   BsCheckCircleFill,
 } from "react-icons/bs";
@@ -36,7 +35,6 @@ import { IconContext } from "react-icons";
 import { GrTest } from "react-icons/gr";
 import { BiTestTube } from "react-icons/bi";
 import ErrorDialogBox from "./components/ErrorDialogBox";
-import { isReturnStatement } from "typescript";
 
 function App() {
   const [currentTool, setCurrentTool] = useState(Tool.States);
@@ -47,19 +45,16 @@ function App() {
   const [isLabelUnique, setIsLabelUnique] = useState(true);
   const [areTokensUnique, setAreTokensUnique] = useState(true);
   const [_, currentStackLocation] = useActionStack();
-  const [testStrings, setTestStrings] = useState([]);
-  const [testResults, setTestResults] = useState([]);
-  const testFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the test file input
-  const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  //  ===================
-  //  Uploading Test File
-  //  ===================
+  const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const [testResults, setTestResults] = useState([]);
+  const [tests, setTests] = useState([]);
+  const [testsPanelOpen, setTestsPanelOpen] = useState(false);
+  const testsFileInputRef = useRef<HTMLInputElement>(null); // Create a ref for the test file input
 
   // Function to trigger test file input click event
   const handleLoadTestsButtonClick = () => {
-    testFileInputRef.current?.click(); // Programmatically click the hidden file input
+    testsFileInputRef.current?.click(); // Programmatically click the hidden file input
   };
 
   const showError = (message: string) => {
@@ -71,7 +66,12 @@ function App() {
     setIsErrorVisible(false);
   };
 
-  const handleTestFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  // React state and open/close functions for the "Tests" panel
+  const toggleTestsPanel = () => {
+    setTestsPanelOpen(!testsPanelOpen);
+  };
+
+  const handleTestsFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     StateManager.uploadJSON(e)
       .then((parsedData) => {
         let i = 0;
@@ -86,55 +86,16 @@ function App() {
               expecting: test.expecting,
             });
         }
-        setTestStrings(arr);
+        setTests(arr);
         setTestResults([]);
       })
       .catch((response) => {
-        showError(`Error: ${response}`);
+        showError(`handleTestsFileUpload ${response}`);
       });
   };
 
-  const DisplayTest = testStrings.map((testStr) => (
-    <div key={testStr.id} className="m-2 text-left">
-      <CoreListItem>
-        <CoreListItem_Left>
-          <div className="flex flex-row">
-            <div>{testResults[testStr.id]}</div>
-            <div>
-              {testStr.string}
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                Should be
-                {testStr.expecting === "Accepted" ? (
-                  <span className="text-lime-500 dark:text-lime-300">
-                    {" "}
-                    {testStr.expecting}
-                  </span>
-                ) : (
-                  <span className="text-red-600 dark:text-red-400">
-                    {" "}
-                    {testStr.expecting}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </CoreListItem_Left>
-        <CoreListItem_Right>
-          <button
-            onClick={() => {
-              runSingleTest(testStr.id);
-            }}
-            title={`Test ${testStr.string}`}
-          >
-            <BiTestTube />
-          </button>
-        </CoreListItem_Right>
-      </CoreListItem>
-    </div>
-  ));
-
-  let compareTestAndExpect = (testRes: string, expecting: string) => {
-    return testRes === expecting ? (
+  const compareExpectedAndResult = (expecting: string, testRes: string) => {
+    return expecting === testRes ? (
       <IconContext.Provider value={{ size: "1.5em" }}>
         <BsCheckCircleFill className="min-h-full mr-2 text-green-400 dark:text-green-600 text-lg" />
       </IconContext.Provider>
@@ -145,34 +106,66 @@ function App() {
     );
   };
 
-  let runSingleTest = (id: number) => {
-    let results = testStrings.map((testStr) => {
-      if (testStr.id === id) {
-        let res = testStringOnAutomata(testStr.string);
-        return compareTestAndExpect(res, testStr.expecting);
-      } else return testResults[testStr.id];
-    });
-    setTestResults(results);
-  };
-
-  let runTests = () => {
+  const runAllTests = () => {
     if (StateManager.checkDebug()) {
       showError("Please disable Debug Mode before running all of the tests.");
       return;
     }
-    let results = testStrings.map((test) => {
+    let results = tests.map((test) => {
       let res = testStringOnAutomata(test.string);
-      return compareTestAndExpect(res, test.expecting);
+      return compareExpectedAndResult(test.expecting, res);
     });
     setTestResults(results);
   };
 
-  // React state and open/close functions for the "Tests" panel
-  const [testsPanelOpen, setTestsPanelOpen] = useState(false);
-  const toggleTestsPanel = () => {
-    setTestsPanelOpen(!testsPanelOpen);
+  const runSingleTest = (id: number) => {
+    let results = tests.map((test) => {
+      if (test.id === id) {
+        let res = testStringOnAutomata(test.string);
+        return compareExpectedAndResult(test.expecting, res);
+      } else return testResults[test.id];
+    });
+    setTestResults(results);
   };
-  //  =======================================
+
+  const DisplayTest = tests.map((test) => (
+    <div key={test.id} className="mb-2 text-left">
+      <CoreListItem>
+        <CoreListItem_Left>
+          <div className="flex">
+            <div>{testResults[test.id]}</div>
+            <div>
+              {test.string}
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                Should be
+                {test.expecting === "Accepted" ? (
+                  <span className="text-lime-500 dark:text-lime-300">
+                    {" "}
+                    {test.expecting}
+                  </span>
+                ) : (
+                  <span className="text-red-600 dark:text-red-400">
+                    {" "}
+                    {test.expecting}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </CoreListItem_Left>
+        <CoreListItem_Right>
+          <button
+            onClick={() => {
+              runSingleTest(test.id);
+            }}
+            title={`Test ${test.string}`}
+          >
+            <BiTestTube />
+          </button>
+        </CoreListItem_Right>
+      </CoreListItem>
+    </div>
+  ));
 
   // Adds the "confirm close" modal when attempting to close the page.
   // Solution from this stackoverflow page:
@@ -420,15 +413,13 @@ function App() {
           {testsPanelOpen && (
             <FloatingPanel heightPolicy="min" style={{ width: "300px" }}>
               <div className="flow-root">
-                <div className="float-left">
-                  <div className="font-medium text-3xl mb-2">Tests</div>
-                </div>
+                <div className="float-left text-3xl mb-2">Tests</div>
                 <input
                   type="file"
-                  id="test-file-uploader"
-                  ref={testFileInputRef}
+                  id="tests-file-uploader"
+                  ref={testsFileInputRef}
                   style={{ display: "none" }}
-                  onChange={handleTestFileUpload}
+                  onChange={handleTestsFileUpload}
                 />
                 <button
                   className="float-right"
@@ -443,8 +434,8 @@ function App() {
               <div className="max-h-48 overflow-y-auto">{DisplayTest}</div>
               <div className="flex flex-col">
                 <button
-                  className="rounded-full p-2 m-1 mx-2 block bg-blue-600 dark:bg-blue-800 text-white text-center"
-                  onClick={runTests}
+                  className="rounded-full p-2 m-1 bg-blue-600 dark:bg-blue-800 text-white text-center"
+                  onClick={runAllTests}
                 >
                   Run All Tests
                 </button>
